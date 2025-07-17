@@ -14,57 +14,58 @@ void UNAWidgetSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	Super::Initialize(Collection);
 
 	WidgetFolderPath = TEXT("/Game/00_ProjectNA/01_Blueprint/01_Widget/Common");
-
-	// FAssetRegistryModule& module = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-	//
-	// FARFilter filter;
-	// filter.PackagePaths.Add(*WidgetFolderPath);
-	// filter.ClassNames.Add(UUserWidget::StaticClass()->GetFName());
-	// //filter.ClassPaths.Add(FTopLevelAssetPath(TEXT("/Script/UMG.UserWidget")));
-	// filter.bRecursivePaths = true;
-	// filter.bRecursiveClasses = true;
-	//
-	//
-	// TArray<FAssetData> assetList;
-	// module.Get().GetAssets(filter,assetList);
-	//
-	// for (const FAssetData& asset : assetList)
-	// {
-	// 	UBlueprint* bp = Cast<UBlueprint>(asset.GetAsset());
-	// 	if (!bp) continue;
-	//
-	// 	UClass* generatedClass = bp->GeneratedClass;
-	// 	
-	// 	if (generatedClass && generatedClass->IsChildOf(UUserWidget::StaticClass()))
-	// 	{
-	// 		TSubclassOf<UUserWidget> widgetClass = Cast<UClass>(generatedClass);
-	//
-	// 		if (widgetClass)
-	// 			CachedWidgets.Emplace(widgetClass->GetName(), widgetClass);
-	// 	}
-	// }
-
-	// defaultengine.ini에 등록된 primary asset으로 등록된 widget들을 불러옴
-	// projectsetting -> assetmanager 에서도 수정가능함
-	UAssetManager& manager = UAssetManager::Get();
-	TArray<FPrimaryAssetId> widgetAssets;
-	manager.GetPrimaryAssetIdList(FPrimaryAssetType("UserWidget"), widgetAssets);
+	TArray<FString> pathsToScan;
+	pathsToScan.Add(WidgetFolderPath);
 	
-	for (const FPrimaryAssetId& assetId : widgetAssets)
+	FAssetRegistryModule& module = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+	module.Get().ScanPathsSynchronous(pathsToScan);
+	FARFilter filter;
+	filter.PackagePaths.Add(*WidgetFolderPath);
+	//filter.ClassPaths.Add(UUserWidget::StaticClass()->GetClassPathName());
+	filter.bRecursivePaths = true;
+	filter.bRecursiveClasses = true;
+	
+	TArray<FAssetData> assetList;
+	module.Get().GetAssets(filter,assetList);
+	
+	for (const FAssetData& asset : assetList)
 	{
-		FSoftObjectPath widgetClassPath = manager.GetPrimaryAssetPath(assetId);
-		FString assetName = widgetClassPath.GetAssetName();
-		FString keyName = assetName.Replace(TEXT("BP_"),TEXT("U")).Replace(TEXT("_C"),TEXT(""));
+		UBlueprint* bp = Cast<UBlueprint>(asset.GetAsset());
+		if (!bp) continue;
+	
+		UClass* generatedClass = bp->GeneratedClass;
 		
-		UClass* rawClass = StaticLoadClass(
-			UUserWidget::StaticClass(),
-			nullptr,
-			*widgetClassPath.ToString()
-			);
+		if (generatedClass && generatedClass->IsChildOf(UUserWidget::StaticClass()))
+		{
+			TSubclassOf<UUserWidget> widgetClass = Cast<UClass>(generatedClass);
+			FString keyName = widgetClass->GetName().Replace(TEXT("BP_"),TEXT("U")).Replace(TEXT("_C"),TEXT(""));
 
-		TSubclassOf<UUserWidget> widgetClass = Cast<UClass>(rawClass);
-		CachedWidgets.Emplace(keyName, widgetClass);
+			if (widgetClass)
+				CachedWidgets.Emplace(keyName, widgetClass);
+		}
 	}
+
+	// // defaultengine.ini에 등록된 primary asset으로 등록된 widget들을 불러옴
+	// // projectsetting -> assetmanager 에서도 수정가능함
+	// UAssetManager& manager = UAssetManager::Get();
+	// TArray<FPrimaryAssetId> widgetAssets;
+	// manager.GetPrimaryAssetIdList(FPrimaryAssetType("UserWidget"), widgetAssets);
+	//
+	// for (const FPrimaryAssetId& assetId : widgetAssets)
+	// {
+	// 	FSoftObjectPath widgetClassPath = manager.GetPrimaryAssetPath(assetId);
+	// 	FString assetName = widgetClassPath.GetAssetName();
+	// 	FString keyName = assetName.Replace(TEXT("BP_"),TEXT("U")).Replace(TEXT("_C"),TEXT(""));
+	// 	
+	// 	UClass* rawClass = StaticLoadClass(
+	// 		UUserWidget::StaticClass(),
+	// 		nullptr,
+	// 		*widgetClassPath.ToString()
+	// 		);
+	//
+	// 	TSubclassOf<UUserWidget> widgetClass = Cast<UClass>(rawClass);
+	// 	CachedWidgets.Emplace(keyName, widgetClass);
+	// }
 }
 
 template<class WidgetType>

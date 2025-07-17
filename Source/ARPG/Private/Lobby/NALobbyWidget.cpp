@@ -23,14 +23,14 @@ void UNALobbyWidget::NativeConstruct()
 	SessionListWidget->SetVisibility(ESlateVisibility::Hidden);	
 
 	// test
-	// UNAWidgetSubsystem::ShowMessageBox(GetWorld(),
-	// 	EMessageBoxType::Ok,
-	// 	TEXT("테스트"),
-	// 	TEXT("테스트"),
-	// 	[&]()
-	// 	{
-	// 		OnClick_SingleMode();
-	// 	});
+	UNAWidgetSubsystem::ShowMessageBox(GetWorld(),
+		EMessageBoxType::Ok,
+		TEXT("테스트"),
+		TEXT("테스트"),
+		[&]()
+		{
+			OnClick_SingleMode();
+		});
 }
 
 void UNALobbyWidget::OnClick_SingleMode()
