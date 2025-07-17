@@ -14,6 +14,8 @@ void UNAStateMachineComponent::TickComponent(float DeltaTime, enum ELevelTick Ti
 	FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	CurrentState->UpdateState();
 }
 
 void UNAStateMachineComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -23,6 +25,9 @@ void UNAStateMachineComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void UNAStateMachineComponent::ChangeState(ECharacterState NewState)
 {
+	// 기존 state를 종료 시키고 새로운 state에 진입함
+	CurrentState->EndState();
+
 	CurrentState = CharacterStates[NewState];
 
 	CurrentState->EnterState();
